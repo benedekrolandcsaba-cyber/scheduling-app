@@ -2,7 +2,7 @@
   "name": "scheduling-app",
   "version": "1.0.0",
   "description": "Professional CSP Scheduling Engine - Advanced scheduling application with constraint satisfaction",
-  "main": "index.html",
+  "main": "public/index.html",
   "type": "module",
   "scripts": {
     "dev": "vercel dev",

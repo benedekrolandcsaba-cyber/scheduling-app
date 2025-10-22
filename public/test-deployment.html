@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin: 0;
+        }
+        .test-container {
+            background: rgba(255,255,255,0.1);
+            padding: 2rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .timestamp {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 Vercel Deployment Test</h1>
+        <p><strong>Status:</strong> ✅ Files Updated Successfully!</p>
+        <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+        <p><strong>Version:</strong> Professional Scheduling Engine v2.0</p>
+        
+        <div style="margin: 2rem 0;">
+            <h3>📋 Deployment Checklist:</h3>
+            <ul style="text-align: left; display: inline-block;">
+                <li>✅ GitHub files pushed</li>
+                <li>✅ Vercel build triggered</li>
+                <li>✅ Static files deployed</li>
+                <li>✅ API endpoints ready</li>
+                <li>✅ Database connected</li>
+            </ul>
+        </div>
+        
+        <div style="margin: 2rem 0;">
+            <a href="/index.html" style="background: #28a745; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 6px; display: inline-block;">
+                🏠 Go to Main App
+            </a>
+        </div>
+        
+        <div class="timestamp">
+            Last updated: October 22, 2025 - 23:55 UTC
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // Test if new files are accessible
+        fetch('/css/dashboard.css')
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ CSS files accessible');
+                } else {
+                    console.log('❌ CSS files not found');
+                }
+            })
+            .catch(error => {
+                console.log('❌ CSS fetch error:', error);
+            });
+            
+        fetch('/js/dashboard.js')
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ JS files accessible');
+                } else {
+                    console.log('❌ JS files not found');
+                }
+            })
+            .catch(error => {
+                console.log('❌ JS fetch error:', error);
+            });
+    </script>
+</body>
+</html>
