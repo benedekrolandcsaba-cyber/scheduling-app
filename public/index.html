@@ -351,23 +351,32 @@
             console.error('Failed to load scripts:', error);
         }
         
-        await loadSettings();
-        setupControls();
-        
-        // Initialize dashboard first
-        if (window.dashboard) {
-            await window.dashboard.initialize();
-        }
-        
-        // Load last generated solution automatically
-        const solutionLoaded = await loadLastSolution();
-        if (!solutionLoaded) {
+        try {
+            await loadSettings();
+            setupControls();
+            
+            // Initialize dashboard first
+            if (window.dashboard) {
+                await window.dashboard.initialize();
+            }
+            
+            // Load last generated solution automatically
+            const solutionLoaded = await loadLastSolution();
+            if (!solutionLoaded) {
+                renderCalendar();
+            }
+            
+            setupModals();
+            renderActiveGroupConstraints();
+            updateConnectionStatus();
+        } catch (error) {
+            console.error('Initialization error:', error);
+            // Fallback to basic functionality
+            setupControls();
             renderCalendar();
+            setupModals();
+            updateConnectionStatus();
         }
-        
-        setupModals();
-        renderActiveGroupConstraints();
-        updateConnectionStatus();
     });
 
     function setupControls() {
@@ -498,15 +507,26 @@
     }
 
     async function loadSettings() {
+        let savedGroups, settings;
+        
         try {
-            // Load from database via API
-            const savedGroups = await window.apiClient.getGroups();
+            // Try to load from database via API
+            savedGroups = await window.apiClient.getGroups();
             groupConstraints = await window.apiClient.getGroupConstraints();
             individualConstraints = await window.apiClient.getIndividualConstraints();
             weeklyScheduleSettings = await window.apiClient.getWeeklyScheduleSettings();
-            const settings = await window.apiClient.getSettings();
-            
-            const groups = (savedGroups && savedGroups.length > 0) ? savedGroups : DEFAULT_GROUPS;
+            settings = await window.apiClient.getSettings();
+        } catch (error) {
+            console.error('Failed to load settings from database, using localStorage:', error);
+            // Fallback to localStorage
+            savedGroups = JSON.parse(localStorage.getItem('scheduler_group_params')) || DEFAULT_GROUPS;
+            groupConstraints = JSON.parse(localStorage.getItem('scheduler_group_constraints')) || [];
+            individualConstraints = JSON.parse(localStorage.getItem('scheduler_individual_constraints')) || {};
+            weeklyScheduleSettings = JSON.parse(localStorage.getItem('scheduler_weekly_settings')) || {};
+            settings = {};
+        }
+        
+        const groups = (savedGroups && savedGroups.length > 0) ? savedGroups : DEFAULT_GROUPS;
             
             // Apply loaded settings to UI
             if (settings['scheduler_rooms']) {
@@ -532,15 +552,6 @@
             }
             
             updateConnectionStatus();
-        } catch (error) {
-            console.error('Failed to load settings from database, using localStorage:', error);
-            // Fallback to localStorage (handled by API client)
-            const savedGroups = JSON.parse(localStorage.getItem('scheduler_group_params'));
-            groupConstraints = JSON.parse(localStorage.getItem('scheduler_group_constraints')) || [];
-            individualConstraints = JSON.parse(localStorage.getItem('scheduler_individual_constraints')) || {};
-            weeklyScheduleSettings = JSON.parse(localStorage.getItem('scheduler_weekly_settings')) || {};
-            const groups = savedGroups || DEFAULT_GROUPS;
-        }
 
         const groupContainer = document.getElementById('group-param-container');
         const groupSelect = document.getElementById('constraint-group');

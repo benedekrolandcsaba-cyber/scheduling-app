@@ -1,4 +1,61 @@
-import { getGroups, saveGroup, initializeDatabase } from './db.js';
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL);
+
+// Initialize database tables
+async function initializeDatabase() {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS groups (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        count INTEGER NOT NULL DEFAULT 1,
+        duration INTEGER NOT NULL DEFAULT 15,
+        measurements INTEGER NOT NULL DEFAULT 1,
+        frequency VARCHAR(20) NOT NULL DEFAULT 'monthly',
+        pattern VARCHAR(20) NOT NULL DEFAULT 'any',
+        preferred_day VARCHAR(10) DEFAULT 'any',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    return { success: true };
+  } catch (error) {
+    console.error('Database initialization error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function getGroups() {
+  try {
+    const groups = await sql`SELECT * FROM groups ORDER BY id`;
+    return { success: true, data: groups };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+async function saveGroup(group) {
+  try {
+    await sql`
+      INSERT INTO groups (id, name, count, duration, measurements, frequency, pattern, preferred_day, updated_at)
+      VALUES (${group.id}, ${group.name}, ${group.count}, ${group.duration}, ${group.measurements}, ${group.freq}, ${group.pattern}, ${group.preferredDay}, CURRENT_TIMESTAMP)
+      ON CONFLICT (id) 
+      DO UPDATE SET 
+        name = EXCLUDED.name,
+        count = EXCLUDED.count,
+        duration = EXCLUDED.duration,
+        measurements = EXCLUDED.measurements,
+        frequency = EXCLUDED.frequency,
+        pattern = EXCLUDED.pattern,
+        preferred_day = EXCLUDED.preferred_day,
+        updated_at = CURRENT_TIMESTAMP
+    `;
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
 
 export default async function handler(req, res) {
   // Enable CORS

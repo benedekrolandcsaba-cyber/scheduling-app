@@ -20,16 +20,30 @@ class SchedulingDashboard {
 
     async loadCurrentSession() {
         try {
-            const sessions = await window.apiClient.request('/planning-sessions?status=active');
-            this.currentSession = sessions.length > 0 ? sessions[0] : null;
+            // For now, create a mock session until API is working
+            this.currentSession = {
+                name: 'Current Schedule',
+                start_date: '2025-10-20',
+                end_date: '2025-11-20',
+                total_appointments: 0,
+                conflicts_count: 0,
+                optimization_score: 0
+            };
         } catch (error) {
             console.error('Failed to load current session:', error);
+            this.currentSession = null;
         }
     }
 
     async loadMetrics() {
         try {
-            this.metrics = await window.apiClient.request('/dashboard/metrics');
+            // For now, use mock metrics until API is working
+            this.metrics = {
+                totalAppointments: 0,
+                totalConflicts: 0,
+                resolutionRate: 100,
+                optimizationScore: 0
+            };
         } catch (error) {
             console.error('Failed to load metrics:', error);
             this.metrics = {
