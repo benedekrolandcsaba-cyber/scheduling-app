@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional CSP Scheduling Engine</title>
+    <link rel="stylesheet" href="css/dashboard.css">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 1rem; }
         .container { max-width: 95%; margin: auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
@@ -327,19 +328,36 @@
             script.type = 'module';
             document.head.appendChild(script);
             
-            // Wait a bit for the script to load
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Load advanced algorithms
+            const algorithmsScript = document.createElement('script');
+            algorithmsScript.src = '/js/advanced-algorithms.js';
+            algorithmsScript.type = 'module';
+            document.head.appendChild(algorithmsScript);
+            
+            // Load dashboard
+            const dashboardScript = document.createElement('script');
+            dashboardScript.src = '/js/dashboard.js';
+            dashboardScript.type = 'module';
+            document.head.appendChild(dashboardScript);
+            
+            // Wait a bit for the scripts to load
+            await new Promise(resolve => setTimeout(resolve, 300));
             
             // Check database connection
             if (window.apiClient) {
                 await window.apiClient.checkConnection();
             }
         } catch (error) {
-            console.error('Failed to load API client:', error);
+            console.error('Failed to load scripts:', error);
         }
         
         await loadSettings();
         setupControls();
+        
+        // Initialize dashboard first
+        if (window.dashboard) {
+            await window.dashboard.initialize();
+        }
         
         // Load last generated solution automatically
         const solutionLoaded = await loadLastSolution();

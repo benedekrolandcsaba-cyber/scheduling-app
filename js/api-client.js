@@ -241,6 +241,86 @@ class APIClient {
         }
     }
 
+    // Planning Sessions API
+    async getPlanningSession(id) {
+        try {
+            return await this.request(`/planning-sessions?id=${id}`);
+        } catch (error) {
+            console.error('Failed to get planning session:', error);
+            return null;
+        }
+    }
+
+    async getPlanningSessionsByStatus(status = 'active') {
+        try {
+            return await this.request(`/planning-sessions?status=${status}`);
+        } catch (error) {
+            console.error('Failed to get planning sessions:', error);
+            return [];
+        }
+    }
+
+    async createPlanningSession(sessionData) {
+        try {
+            return await this.request('/planning-sessions', {
+                method: 'POST',
+                body: JSON.stringify(sessionData)
+            });
+        } catch (error) {
+            console.error('Failed to create planning session:', error);
+            throw error;
+        }
+    }
+
+    async updatePlanningSession(id, updates) {
+        try {
+            return await this.request(`/planning-sessions?id=${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(updates)
+            });
+        } catch (error) {
+            console.error('Failed to update planning session:', error);
+            throw error;
+        }
+    }
+
+    // Dashboard API
+    async getDashboardMetrics() {
+        try {
+            return await this.request('/dashboard?endpoint=metrics');
+        } catch (error) {
+            console.error('Failed to get dashboard metrics:', error);
+            return {
+                totalAppointments: 0,
+                totalConflicts: 0,
+                resolutionRate: 0,
+                optimizationScore: 0
+            };
+        }
+    }
+
+    async getDashboardConflicts() {
+        try {
+            return await this.request('/dashboard?endpoint=conflicts');
+        } catch (error) {
+            console.error('Failed to get dashboard conflicts:', error);
+            return [];
+        }
+    }
+
+    // Advanced Scheduling API
+    async executeAdvancedScheduling(config) {
+        try {
+            return await this.request('/advanced-scheduling', {
+                method: 'POST',
+                body: JSON.stringify(config)
+            });
+        } catch (error) {
+            console.error('Failed to execute advanced scheduling:', error);
+            throw error;
+        }
+    }
+
     // Utility method for localStorage fallback
     getFromLocalStorage(endpoint) {
         const keyMap = {
