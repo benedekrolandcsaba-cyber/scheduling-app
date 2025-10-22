@@ -340,6 +340,11 @@
             dashboardScript.type = 'module';
             document.head.appendChild(dashboardScript);
             
+            // Load calendar fix
+            const fixScript = document.createElement('script');
+            fixScript.src = '/fix-calendar.js';
+            document.head.appendChild(fixScript);
+            
             // Wait a bit for the scripts to load
             await new Promise(resolve => setTimeout(resolve, 300));
             
@@ -349,6 +354,23 @@
             }
         } catch (error) {
             console.error('Failed to load scripts:', error);
+        }
+        
+        // Wait longer for scripts to load and initialize API client
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Initialize API client if not loaded
+        if (!window.apiClient) {
+            // Create a simple fallback API client
+            window.apiClient = {
+                async getGroups() { return JSON.parse(localStorage.getItem('scheduler_group_params')) || []; },
+                async getGroupConstraints() { return JSON.parse(localStorage.getItem('scheduler_group_constraints')) || []; },
+                async getIndividualConstraints() { return JSON.parse(localStorage.getItem('scheduler_individual_constraints')) || {}; },
+                async getWeeklyScheduleSettings() { return JSON.parse(localStorage.getItem('scheduler_weekly_settings')) || {}; },
+                async getSettings() { return {}; },
+                async checkConnection() { return false; },
+                getConnectionStatus() { return false; }
+            };
         }
         
         try {
@@ -373,7 +395,14 @@
             console.error('Initialization error:', error);
             // Fallback to basic functionality
             setupControls();
-            renderCalendar();
+            try {
+                renderCalendar();
+            } catch (calendarError) {
+                console.error('Calendar render error:', calendarError);
+                // Set a default date if there's a date issue
+                const today = new Date();
+                renderCalendar(today.getFullYear(), today.getMonth());
+            }
             setupModals();
             updateConnectionStatus();
         }
@@ -2082,8 +2111,17 @@
 
     // --- Calendar Rendering ---
     function renderCalendar(year, month) {
-        const { startDate } = getPlanningRange();
-        const displayDate = (typeof year === 'number' && month != null) ? new Date(Date.UTC(year, month, 1)) : startDate;
+        try {
+            const { startDate } = getPlanningRange();
+            const displayDate = (typeof year === 'number' && month != null) ? new Date(Date.UTC(year, month, 1)) : startDate;
+            
+            // Validate displayDate
+            if (!displayDate || isNaN(displayDate.getTime())) {
+                const today = new Date();
+                var validDisplayDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            } else {
+                var validDisplayDate = displayDate;
+            }
         
         const displayYear = displayDate.getUTCFullYear();
         const displayMonth = displayDate.getUTCMonth();
@@ -2136,8 +2174,22 @@
     function getCurrentGroupParams() { return Array.from(document.querySelectorAll('.group-card')).map(card => { const id = card.querySelector('input[type=number]').id.replace('-count', ''); return { id, name: card.querySelector('h3').textContent, count: parseInt(document.getElementById(`${id}-count`).value), duration: parseInt(document.getElementById(`${id}-duration`).value), measurements: parseInt(document.getElementById(`${id}-measurements`).value) || 1, freq: document.getElementById(`${id}-freq`).value, pattern: document.getElementById(`${id}-pattern`).value, preferredDay: document.getElementById(`${id}-preferredDay`).value }; }); }
 
     function getPlanningRange(startDateStr) {
-        const d = startDateStr || document.getElementById('schedule-start-date').value;
-        const userStartDate = new Date(d + 'T00:00:00Z');
+        const startDateElement = document.getElementById('schedule-start-date');
+        const d = startDateStr || (startDateElement ? startDateElement.value : '2025-10-20');
+        
+        // Validate date string
+        if (!d || d === '') {
+            const today = new Date();
+            const userStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        } else {
+            var userStartDate = new Date(d + 'T00:00:00Z');
+        }
+        
+        // Check if date is valid
+        if (isNaN(userStartDate.getTime())) {
+            const today = new Date();
+            userStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        }
         const horizonWeeks = Math.max(1, parseInt(localStorage.getItem('scheduler_horizon_weeks') || document.getElementById('horizon-weeks')?.value || '5', 10));
         const alignment = localStorage.getItem('scheduler_start_alignment') || document.getElementById('start-alignment')?.value || 'as_is';
         const allowPast = (localStorage.getItem('scheduler_allow_past') || (document.getElementById('allow-past')?.checked ? 'true' : 'false')) === 'true';
