@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "scheduling-app",
+  "name": "scheduler",
   "builds": [
     {
       "src": "*.html",

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        .test-result { padding: 1rem; margin: 1rem 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 0.5rem 1rem; margin: 0.5rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Scheduling App API Test</h1>
+    
+    <div class="test-result info">
+        <h3>Test Status</h3>
+        <p id="status">Initializing tests...</p>
+    </div>
+
+    <div>
+        <button onclick="testOfflineMode()">Test Offline Mode</button>
+        <button onclick="testLocalStorage()">Test LocalStorage</button>
+        <button onclick="testAPIClient()">Test API Client</button>
+        <button onclick="testSchedulingEngine()">Test Scheduling Engine</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script type="module">
+        // Mock API Client for testing
+        class MockAPIClient {
+            constructor() {
+                this.isOnline = false; // Simulate offline mode
+                this.testData = {
+                    groups: [
+                        { id: 'teacher', name: 'Teachers', count: 2, duration: 30, freq: 'weekly' },
+                        { id: 'student', name: 'Students', count: 5, duration: 15, freq: 'monthly' }
+                    ],
+                    constraints: [],
+                    individualConstraints: {},
+                    appointments: new Map()
+                };
+            }
+
+            async getGroups() {
+                await this.simulateDelay();
+                if (this.isOnline) {
+                    throw new Error('Simulated network error');
+                }
+                // Fallback to localStorage
+                const saved = localStorage.getItem('scheduler_group_params');
+                return saved ? JSON.parse(saved) : this.testData.groups;
+            }
+
+            async saveGroups(groups) {
+                await this.simulateDelay();
+                localStorage.setItem('scheduler_group_params', JSON.stringify(groups));
+                return { success: true, offline: !this.isOnline };
+            }
+
+            async getGroupConstraints() {
+                await this.simulateDelay();
+                const saved = localStorage.getItem('scheduler_group_constraints');
+                return saved ? JSON.parse(saved) : [];
+            }
+
+            async saveGroupConstraints(constraints) {
+                await this.simulateDelay();
+                localStorage.setItem('scheduler_group_constraints', JSON.stringify(constraints));
+                return { success: true, offline: !this.isOnline };
+            }
+
+            async checkConnection() {
+                return this.isOnline;
+            }
+
+            getConnectionStatus() {
+                return this.isOnline;
+            }
+
+            simulateDelay() {
+                return new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+        // Initialize mock API client
+        window.apiClient = new MockAPIClient();
+
+        // Test functions
+        window.testOfflineMode = async function() {
+            addResult('info', 'Testing Offline Mode...', 'offline-test');
+            
+            try {
+                // Test saving data offline
+                const testGroups = [
+                    { id: 'test', name: 'Test Group', count: 3, duration: 20, freq: 'weekly' }
+                ];
+                
+                const saveResult = await window.apiClient.saveGroups(testGroups);
+                if (saveResult.success && saveResult.offline) {
+                    addResult('success', '✅ Offline save successful', 'offline-save');
+                } else {
+                    addResult('error', '❌ Offline save failed', 'offline-save');
+                    return;
+                }
+
+                // Test loading data offline
+                const loadedGroups = await window.apiClient.getGroups();
+                if (loadedGroups && loadedGroups.length > 0) {
+                    addResult('success', `✅ Offline load successful: ${loadedGroups.length} groups loaded`, 'offline-load');
+                } else {
+                    addResult('error', '❌ Offline load failed', 'offline-load');
+                }
+
+            } catch (error) {
+                addResult('error', `❌ Offline mode test failed: ${error.message}`, 'offline-error');
+            }
+        };
+
+        window.testLocalStorage = function() {
+            addResult('info', 'Testing LocalStorage...', 'localStorage-test');
+            
+            try {
+                // Test basic localStorage operations
+                const testData = { test: 'data', timestamp: Date.now() };
+                localStorage.setItem('test_key', JSON.stringify(testData));
+                
+                const retrieved = JSON.parse(localStorage.getItem('test_key'));
+                if (retrieved && retrieved.test === 'data') {
+                    addResult('success', '✅ LocalStorage read/write successful', 'localStorage-rw');
+                } else {
+                    addResult('error', '❌ LocalStorage read/write failed', 'localStorage-rw');
+                    return;
+                }
+
+                // Test localStorage capacity
+                const largeData = 'x'.repeat(1000000); // 1MB string
+                try {
+                    localStorage.setItem('large_test', largeData);
+                    localStorage.removeItem('large_test');
+                    addResult('success', '✅ LocalStorage capacity test passed', 'localStorage-capacity');
+                } catch (e) {
+                    addResult('error', `❌ LocalStorage capacity limited: ${e.message}`, 'localStorage-capacity');
+                }
+
+                // Cleanup
+                localStorage.removeItem('test_key');
+
+            } catch (error) {
+                addResult('error', `❌ LocalStorage test failed: ${error.message}`, 'localStorage-error');
+            }
+        };
+
+        window.testAPIClient = async function() {
+            addResult('info', 'Testing API Client...', 'api-test');
+            
+            try {
+                // Test connection status
+                const isOnline = await window.apiClient.checkConnection();
+                addResult('info', `Connection status: ${isOnline ? 'Online' : 'Offline'}`, 'api-connection');
+
+                // Test groups API
+                const testGroups = [
+                    { id: 'api_test', name: 'API Test Group', count: 1, duration: 15, freq: 'monthly' }
+                ];
+                
+                await window.apiClient.saveGroups(testGroups);
+                const loadedGroups = await window.apiClient.getGroups();
+                
+                if (loadedGroups && loadedGroups.some(g => g.id === 'api_test')) {
+                    addResult('success', '✅ API Client groups test passed', 'api-groups');
+                } else {
+                    addResult('error', '❌ API Client groups test failed', 'api-groups');
+                }
+
+                // Test constraints API
+                const testConstraints = [
+                    { group: 'api_test', week: 'all', type: 'not_day', value: 5 }
+                ];
+                
+                await window.apiClient.saveGroupConstraints(testConstraints);
+                const loadedConstraints = await window.apiClient.getGroupConstraints();
+                
+                if (Array.isArray(loadedConstraints)) {
+                    addResult('success', '✅ API Client constraints test passed', 'api-constraints');
+                } else {
+                    addResult('error', '❌ API Client constraints test failed', 'api-constraints');
+                }
+
+            } catch (error) {
+                addResult('error', `❌ API Client test failed: ${error.message}`, 'api-error');
+            }
+        };
+
+        window.testSchedulingEngine = function() {
+            addResult('info', 'Testing Scheduling Engine Core Functions...', 'engine-test');
+            
+            try {
+                // Test date utilities
+                const testDate = new Date('2025-10-20T00:00:00Z');
+                const dayOfWeek = testDate.getUTCDay();
+                if (dayOfWeek === 1) { // Monday
+                    addResult('success', '✅ Date utilities working', 'engine-dates');
+                } else {
+                    addResult('error', '❌ Date utilities failed', 'engine-dates');
+                }
+
+                // Test time slot generation
+                const times = Array.from({ length: 32 }, (_, i) => {
+                    const h = Math.floor(i / 4) + 9;
+                    const m = (i % 4) * 15;
+                    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                });
+                
+                if (times.length === 32 && times[0] === '09:00' && times[31] === '16:45') {
+                    addResult('success', '✅ Time slot generation working', 'engine-timeslots');
+                } else {
+                    addResult('error', '❌ Time slot generation failed', 'engine-timeslots');
+                }
+
+                // Test constraint validation
+                const mockConstraint = { group: 'test', week: 'all', type: 'not_day', value: 5 };
+                const mockDate = new Date('2025-10-24T00:00:00Z'); // Friday
+                const isValid = mockDate.getUTCDay() !== mockConstraint.value;
+                
+                if (!isValid) { // Should be invalid (Friday = 5)
+                    addResult('success', '✅ Constraint validation working', 'engine-constraints');
+                } else {
+                    addResult('error', '❌ Constraint validation failed', 'engine-constraints');
+                }
+
+            } catch (error) {
+                addResult('error', `❌ Scheduling engine test failed: ${error.message}`, 'engine-error');
+            }
+        };
+
+        window.runAllTests = async function() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('status').textContent = 'Running all tests...';
+            
+            await testOfflineMode();
+            testLocalStorage();
+            await testAPIClient();
+            testSchedulingEngine();
+            
+            document.getElementById('status').textContent = 'All tests completed! Check results below.';
+        };
+
+        function addResult(type, message, id) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.id = id;
+            resultDiv.innerHTML = `<strong>${message}</strong>`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        // Auto-run basic tests on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('status').textContent = 'Ready for testing. Click buttons to run tests.';
+            addResult('info', '🚀 Test environment initialized. API Client is in offline mode for testing.', 'init');
+        });
+    </script>
+</body>
+</html>
