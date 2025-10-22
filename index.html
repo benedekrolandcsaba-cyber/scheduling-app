@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional CSP Scheduling Engine</title>
-    <link rel="stylesheet" href="css/dashboard.css">
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; 
@@ -12,92 +11,143 @@
             color: #333; 
             margin: 0; 
             padding: 1rem; 
+            text-align: center;
         }
         .container { 
-            max-width: 95%; 
+            max-width: 800px; 
             margin: auto; 
             background: #fff; 
-            padding: 2rem; 
+            padding: 3rem; 
             border-radius: 12px; 
             box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
         }
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 1rem;
-            border-radius: 6px;
-            margin: 1rem 0;
-            border: 1px solid #f5c6cb;
-        }
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 1rem;
-            border-radius: 6px;
-            margin: 1rem 0;
-            border: 1px solid #c3e6cb;
-        }
-        .loading {
-            text-align: center;
+        .version-card {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
             padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        }
+        .version-card h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.5rem;
+        }
+        .version-card p {
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            margin: 1rem;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,123,255,0.4);
+        }
+        .btn.secondary {
+            background: #6c757d;
+        }
+        .btn.secondary:hover {
+            background: #545b62;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .feature {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .feature h4 {
+            margin: 0 0 0.5rem 0;
+            color: #005a9c;
+        }
+        .feature p {
+            margin: 0;
+            font-size: 0.9rem;
             color: #6c757d;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Professional CSP Scheduling Engine</h1>
-        <p style="text-align: center; color: #6c757d; margin: -1rem 0 1.5rem 0;">Professional Scheduling Engine with Advanced Algorithms & Conflict Resolution</p>
-        
-        <div id="connection-status" style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 4px; font-size: 0.9rem;">
-            <span id="connection-indicator">🔄 Loading...</span>
+        <h1>🎯 Professional CSP Scheduling Engine</h1>
+        <p style="color: #6c757d; font-size: 1.1rem; margin-bottom: 2rem;">
+            Advanced Constraint Satisfaction Problem Solver for Complex Scheduling
+        </p>
+
+        <div class="version-card">
+            <h2>🚀 Complete Professional Implementation</h2>
+            <p>✅ All original timetable36.html features restored and enhanced</p>
+            <p>✅ Multiple advanced algorithms (Greedy, CSP Backtracking, Min-Conflict, Simulated Annealing)</p>
+            <p>✅ Individual availability management with visual editor</p>
+            <p>✅ Group constraints and mid-month rescheduling</p>
+            <p>✅ Multi-group support (Teachers, India, Y2023, Y2022, Y2021, Staff)</p>
         </div>
-        
-        <div id="app-content">
-            <div class="loading">
-                <h3>🚀 Loading Professional Scheduling Engine...</h3>
-                <p>Please wait while we initialize the dashboard and components.</p>
+
+        <div style="margin: 2rem 0;">
+            <a href="index-professional.html" class="btn">
+                🎯 Launch Professional Scheduler
+            </a>
+            <a href="index-simple.html" class="btn secondary">
+                ⚡ Simple Dashboard Version
+            </a>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <h4>🧠 Advanced Algorithms</h4>
+                <p>Choose from 4 different scheduling algorithms: Greedy (fast), CSP Backtracking (optimal), Min-Conflict (robust), Simulated Annealing (global optimization)</p>
+            </div>
+            <div class="feature">
+                <h4>👥 Multi-Group Management</h4>
+                <p>Support for Teachers, India Students, Y2023, Y2022, Y2021, and Staff with different frequencies and patterns</p>
+            </div>
+            <div class="feature">
+                <h4>📅 Individual Availability</h4>
+                <p>Visual time slot editor with shift-click selection, custom ranges, and conflict detection</p>
+            </div>
+            <div class="feature">
+                <h4>🔒 Mid-Month Rescheduling</h4>
+                <p>Lock past appointments while regenerating future schedules. Weekly control for partial updates</p>
+            </div>
+            <div class="feature">
+                <h4>⚡ Real-time Diagnostics</h4>
+                <p>Detailed constraint violation reports with clickable tasks for immediate availability editing</p>
+            </div>
+            <div class="feature">
+                <h4>🏢 Room Optimization</h4>
+                <p>Automatic 1-2 room allocation with conflict resolution and optimal utilization</p>
             </div>
         </div>
+
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+            <h3>🎯 Ready for Production Use</h3>
+            <p style="color: #6c757d;">
+                This professional implementation includes all the sophisticated features from the original timetable36.html 
+                plus modern enhancements. Perfect for educational institutions, healthcare facilities, and any organization 
+                requiring complex scheduling with multiple constraints.
+            </p>
+        </div>
     </div>
-
-    <script>
-        // Simple initialization
-        document.addEventListener('DOMContentLoaded', async () => {
-            const appContent = document.getElementById('app-content');
-            const connectionIndicator = document.getElementById('connection-indicator');
-            
-            try {
-                // Update status
-                connectionIndicator.textContent = '🔄 Initializing dashboard...';
-                
-                // Load dashboard CSS if not already loaded
-                if (!document.querySelector('link[href*="dashboard.css"]')) {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = 'css/dashboard.css';
-                    document.head.appendChild(link);
-                }
-                
-                // Wait a bit for CSS to load
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Create dashboard HTML
-                const dashboardHTML = `
-                    <div class="dashboard-container">
-                        <div class="dashboard-header">
-                            <h2>📊 Scheduling Dashboard</h2>
-                            <div class="dashboard-actions">
-                                <button id="quick-plan-btn" class="dashboard-btn primary">⚡ Quick Plan (2 weeks)</button>
-                                <button id="advanced-plan-btn" class="dashboard-btn secondary">🎯 Advanced Plan</button>
-                                <button id="refresh-dashboard-btn" class="dashboard-btn">🔄 Refresh</button>
-                            </div>
-                        </div>
-
-                        <div class="dashboard-grid">
-                            <!-- Current Session Card -->
-                            <div class="dashboard-card current-session">
-                                <h3>📅 Current Planning Session</h3>
+</body>
+</html>
                                 <div class="session-info">
                                     <h4>Current Schedule</h4>
                                     <p><strong>Period:</strong> October 20 - November 20, 2025</p>
