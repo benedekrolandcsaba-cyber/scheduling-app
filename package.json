@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'Static site - no build needed'",
-    "start": "vercel dev"
+    "start": "vercel dev",
+    "test:db": "node test-neon-connection.js",
+    "setup:db": "echo 'Run setup-neon-db.sql in Neon SQL Editor'"
   },
   "keywords": [
     "scheduling",
@@ -19,7 +21,8 @@
   "author": "Benedek Roland Csaba",
   "license": "MIT",
   "dependencies": {
-    "@neondatabase/serverless": "^0.9.0"
+    "@neondatabase/serverless": "^0.9.0",
+    "dotenv": "^16.0.0"
   },
   "devDependencies": {
     "vercel": "^32.0.0"
