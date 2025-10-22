@@ -1,0 +1,7 @@
+# Vercel ignore file
+node_modules
+.env
+.git
+*.log
+test-neon-connection.js
+mock-server.js
