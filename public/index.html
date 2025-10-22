@@ -215,6 +215,14 @@
             const resultsContent = document.getElementById('results-content');
             const calendarContainer = document.getElementById('calendar-container');
             
+            // Check if elements exist (they might not if called from dashboard)
+            if (!resultsDiv || !resultsContent || !calendarContainer) {
+                showMessage('🔄 Loading scheduling interface...');
+                showAdvancedSettings();
+                setTimeout(() => generateQuickSchedule(), 1000);
+                return;
+            }
+            
             // Show loading
             resultsContent.innerHTML = '🔄 Generating quick schedule...';
             resultsDiv.style.display = 'block';
@@ -231,6 +239,14 @@
             const resultsDiv = document.getElementById('schedule-results');
             const resultsContent = document.getElementById('results-content');
             const calendarContainer = document.getElementById('calendar-container');
+            
+            // Check if elements exist (they might not if called from dashboard)
+            if (!resultsDiv || !resultsContent || !calendarContainer) {
+                showMessage('🔄 Loading scheduling interface...');
+                showAdvancedSettings();
+                setTimeout(() => generateAdvancedSchedule(), 1000);
+                return;
+            }
             
             // Show loading
             resultsContent.innerHTML = '🔄 Generating advanced schedule with optimization...';
@@ -428,9 +444,15 @@
             const endDate = prompt('Enter end date (YYYY-MM-DD):', '2025-11-20');
             
             if (startDate && endDate) {
-                document.getElementById('start-date').value = startDate;
-                showMessage('Custom date range set: ' + startDate + ' to ' + endDate);
                 showAdvancedSettings();
+                // Wait for the interface to load, then set the date
+                setTimeout(() => {
+                    const startDateElement = document.getElementById('start-date');
+                    if (startDateElement) {
+                        startDateElement.value = startDate;
+                    }
+                    showMessage('Custom date range set: ' + startDate + ' to ' + endDate);
+                }, 100);
             }
         }
         
@@ -486,35 +508,14 @@
             try {
                 connectionIndicator.textContent = '🔄 Loading full scheduling interface...';
                 
-                // Load the original scheduling interface
-                const originalHTML = await fetch('/timetable36.html').then(r => r.text());
-                
-                // Extract the body content from the original HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(originalHTML, 'text/html');
-                const originalBody = doc.body.innerHTML;
-                
-                // Replace current content with original interface
-                appContent.innerHTML = originalBody;
-                
-                // Load original scripts
-                const scripts = doc.querySelectorAll('script');
-                scripts.forEach(script => {
-                    const newScript = document.createElement('script');
-                    if (script.src) {
-                        newScript.src = script.src;
-                    } else {
-                        newScript.textContent = script.textContent;
-                    }
-                    document.head.appendChild(newScript);
-                });
-                
-                connectionIndicator.textContent = '🟢 Full Interface Loaded';
+                // Skip trying to load timetable36.html and go directly to working scheduler
+                createWorkingScheduler();
+                connectionIndicator.textContent = '🟢 Scheduling Interface Loaded';
                 
             } catch (error) {
-                console.error('Failed to load original interface:', error);
-                // Fallback: Create a working scheduling interface
+                console.error('Failed to load interface:', error);
                 createWorkingScheduler();
+                connectionIndicator.textContent = '🟡 Basic Interface Loaded';
             }
         }
         
