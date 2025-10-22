@@ -280,10 +280,10 @@
                     
                     appointments.push({
                         id: appointmentId++,
-                        person: \`Teacher \${teacher}\`,
+                        person: 'Teacher ' + teacher,
                         group: 'Teachers',
                         date: date.toISOString().split('T')[0],
-                        time: \`\${hour.toString().padStart(2, '0')}:00\`,
+                        time: hour.toString().padStart(2, '0') + ':00',
                         duration: 30,
                         room: room
                     });
@@ -301,10 +301,10 @@
                     
                     appointments.push({
                         id: appointmentId++,
-                        person: \`Student \${student}\`,
+                        person: 'Student ' + student,
                         group: 'Students',
                         date: date.toISOString().split('T')[0],
-                        time: \`\${hour.toString().padStart(2, '0')}:15\`,
+                        time: hour.toString().padStart(2, '0') + ':15',
                         duration: 15,
                         room: room
                     });
@@ -321,10 +321,10 @@
                 
                 appointments.push({
                     id: appointmentId++,
-                    person: \`Staff \${staff}\`,
+                    person: 'Staff ' + staff,
                     group: 'Staff',
                     date: date.toISOString().split('T')[0],
-                    time: \`\${hour.toString().padStart(2, '0')}:30\`,
+                    time: hour.toString().padStart(2, '0') + ':30',
                     duration: 20,
                     room: room
                 });
@@ -344,21 +344,20 @@
             const resultsContent = document.getElementById('results-content');
             
             const conflictText = schedule.conflicts > 0 
-                ? \`<span style="color: #dc3545;">\${schedule.conflicts} conflicts detected</span>\`
-                : \`<span style="color: #28a745;">No conflicts</span>\`;
+                ? '<span style="color: #dc3545;">' + schedule.conflicts + ' conflicts detected</span>'
+                : '<span style="color: #28a745;">No conflicts</span>';
             
-            resultsContent.innerHTML = \`
-                <div style="margin-bottom: 0.5rem;">
-                    <strong>✅ Schedule Generated Successfully!</strong>
-                </div>
-                <div style="font-size: 0.9rem; color: #6c757d;">
-                    <div>📊 Total Appointments: \${schedule.totalAppointments}</div>
-                    <div>⚠️ Conflicts: \${conflictText}</div>
-                    <div>🎯 Optimization Score: \${schedule.optimizationScore}%</div>
-                    <div>⏱️ Generation Time: \${schedule.generationTime}s</div>
-                    <div>🤖 Algorithm: \${schedule.type === 'advanced' ? 'CSP Backtracking' : 'Greedy Assignment'}</div>
-                </div>
-            \`;
+            resultsContent.innerHTML = 
+                '<div style="margin-bottom: 0.5rem;">' +
+                    '<strong>✅ Schedule Generated Successfully!</strong>' +
+                '</div>' +
+                '<div style="font-size: 0.9rem; color: #6c757d;">' +
+                    '<div>📊 Total Appointments: ' + schedule.totalAppointments + '</div>' +
+                    '<div>⚠️ Conflicts: ' + conflictText + '</div>' +
+                    '<div>🎯 Optimization Score: ' + schedule.optimizationScore + '%</div>' +
+                    '<div>⏱️ Generation Time: ' + schedule.generationTime + 's</div>' +
+                    '<div>🤖 Algorithm: ' + (schedule.type === 'advanced' ? 'CSP Backtracking' : 'Greedy Assignment') + '</div>' +
+                '</div>';
         }
         
         function displayCalendar(schedule) {
@@ -383,13 +382,12 @@
                 const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
                 const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 
-                calendarHTML += \`
-                    <div style="margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden;">
-                        <div style="background: #f8f9fa; padding: 0.75rem; font-weight: bold;">
-                            \${dayName}, \${dateStr}
-                        </div>
-                        <div style="padding: 0.5rem;">
-                \`;
+                calendarHTML += 
+                    '<div style="margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden;">' +
+                        '<div style="background: #f8f9fa; padding: 0.75rem; font-weight: bold;">' +
+                            dayName + ', ' + dateStr +
+                        '</div>' +
+                        '<div style="padding: 0.5rem;">';
                 
                 // Sort appointments by time
                 const dayAppointments = appointmentsByDate[date].sort((a, b) => a.time.localeCompare(b.time));
@@ -398,25 +396,23 @@
                     const groupColor = apt.group === 'Teachers' ? '#28a745' : 
                                      apt.group === 'Students' ? '#007bff' : '#6c757d';
                     
-                    calendarHTML += \`
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0; border-bottom: 1px solid #f0f0f0;">
-                            <div>
-                                <span style="background: \${groupColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8rem; margin-right: 0.5rem;">
-                                    \${apt.group}
-                                </span>
-                                <strong>\${apt.person}</strong>
-                            </div>
-                            <div style="font-size: 0.9rem; color: #6c757d;">
-                                \${apt.time} | \${apt.duration}min | Room \${apt.room}
-                            </div>
-                        </div>
-                    \`;
+                    calendarHTML += 
+                        '<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0; border-bottom: 1px solid #f0f0f0;">' +
+                            '<div>' +
+                                '<span style="background: ' + groupColor + '; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8rem; margin-right: 0.5rem;">' +
+                                    apt.group +
+                                '</span>' +
+                                '<strong>' + apt.person + '</strong>' +
+                            '</div>' +
+                            '<div style="font-size: 0.9rem; color: #6c757d;">' +
+                                apt.time + ' | ' + apt.duration + 'min | Room ' + apt.room +
+                            '</div>' +
+                        '</div>';
                 });
                 
-                calendarHTML += \`
-                        </div>
-                    </div>
-                \`;
+                calendarHTML += 
+                        '</div>' +
+                    '</div>';
             });
             
             if (sortedDates.length === 0) {
@@ -433,7 +429,7 @@
             
             if (startDate && endDate) {
                 document.getElementById('start-date').value = startDate;
-                showMessage(\`Custom date range set: \${startDate} to \${endDate}\`);
+                showMessage('Custom date range set: ' + startDate + ' to ' + endDate);
                 showAdvancedSettings();
             }
         }
