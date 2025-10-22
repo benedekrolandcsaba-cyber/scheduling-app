@@ -98,12 +98,21 @@
         .week-checkbox-item.week-disabled input { opacity: 0.5; }
         .week-status { font-size: 0.8rem; color: #6c757d; margin-top: 0.5rem; }
         .week-status.has-appointments { color: #28a745; font-weight: bold; }
+        
+        /* Connection Status Styles */
+        #connection-status { transition: all 0.3s ease; }
+        #connection-status.online { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        #connection-status.offline { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        #connection-status.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Professional CSP Scheduling Engine</h1>
     <p style="text-align: center; color: #6c757d; margin: -1rem 0 1.5rem 0;">Advanced Scheduling with Mid-Month Rescheduling & Locked Past Appointments</p>
+    <div id="connection-status" style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 4px; font-size: 0.9rem;">
+        <span id="connection-indicator">🔄 Connecting to database...</span>
+    </div>
     <div class="main-grid">
         <div class="controls-panel">
             <div class="control-section">
@@ -291,19 +300,56 @@
     const PRIORITY_ORDER = ['teacher', 'india', 'y2023', 'y2022', 'y2021', 'staff'];
     const DEFAULT_GROUPS = [ { id: 'teacher', name: 'Teachers', count: 5, freq: 'weekly', pattern: 'any', preferredDay: 'any', duration: 30 }, { id: 'india', name: 'India Students', count: 4, freq: 'every_2_weeks', pattern: 'any', preferredDay: 'any', duration: 15 }, { id: 'y2023', name: 'Y2023 Students', count: 10, freq: 'every_2_weeks', pattern: 'odd', preferredDay: 'any', duration: 15 }, { id: 'y2022', name: 'Y2022 Students', count: 12, freq: 'every_2_weeks', pattern: 'even', preferredDay: 'any', duration: 15 }, { id: 'y2021', name: 'Y2021 Students', count: 8, freq: 'monthly', pattern: 'any', preferredDay: 'any', duration: 15 }, { id: 'staff', name: 'Staff', count: 6, freq: 'monthly', pattern: 'any', preferredDay: 'any', duration: 15 } ];
 
+    // --- Connection Status Management ---
+    function updateConnectionStatus() {
+        const statusDiv = document.getElementById('connection-status');
+        const indicator = document.getElementById('connection-indicator');
+        
+        if (window.apiClient && window.apiClient.getConnectionStatus()) {
+            statusDiv.style.backgroundColor = '#d4edda';
+            statusDiv.style.color = '#155724';
+            statusDiv.style.border = '1px solid #c3e6cb';
+            indicator.textContent = '🟢 Connected to Neon Database';
+        } else {
+            statusDiv.style.backgroundColor = '#fff3cd';
+            statusDiv.style.color = '#856404';
+            statusDiv.style.border = '1px solid #ffeeba';
+            indicator.textContent = '🟡 Offline Mode (Using Local Storage)';
+        }
+    }
+
     // --- Event Listeners & Initial Setup ---
-    document.addEventListener('DOMContentLoaded', () => {
-        loadSettings();
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Load API client first
+        try {
+            const script = document.createElement('script');
+            script.src = '/js/api-client.js';
+            script.type = 'module';
+            document.head.appendChild(script);
+            
+            // Wait a bit for the script to load
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check database connection
+            if (window.apiClient) {
+                await window.apiClient.checkConnection();
+            }
+        } catch (error) {
+            console.error('Failed to load API client:', error);
+        }
+        
+        await loadSettings();
         setupControls();
         
         // Load last generated solution automatically
-        const solutionLoaded = loadLastSolution();
+        const solutionLoaded = await loadLastSolution();
         if (!solutionLoaded) {
             renderCalendar();
         }
         
         setupModals();
         renderActiveGroupConstraints();
+        updateConnectionStatus();
     });
 
     function setupControls() {
@@ -404,27 +450,79 @@
         });
     }
 
-    // --- Local Storage Persistence ---
-    function saveAllSettings() {
-        localStorage.setItem('scheduler_group_params', JSON.stringify(getCurrentGroupParams()));
-        localStorage.setItem('scheduler_group_constraints', JSON.stringify(groupConstraints));
-        localStorage.setItem('scheduler_individual_constraints', JSON.stringify(individualConstraints));
-        localStorage.setItem('scheduler_weekly_settings', JSON.stringify(weeklyScheduleSettings));
-        localStorage.setItem('scheduler_rooms', document.getElementById('rooms-select').value);
-        localStorage.setItem('scheduler_horizon_weeks', document.getElementById('horizon-weeks').value || '5');
-        localStorage.setItem('scheduler_auto_extend', document.getElementById('auto-extend').checked ? 'true' : 'false');
-        localStorage.setItem('scheduler_start_alignment', document.getElementById('start-alignment').value || 'as_is');
-        localStorage.setItem('scheduler_allow_past', document.getElementById('allow-past').checked ? 'true' : 'false');
-        localStorage.setItem('scheduler_skip_partial_week', document.getElementById('skip-partial-week').checked ? 'true' : 'false');
-        localStorage.setItem('scheduler_min_working_days', document.getElementById('min-working-days').value || '3');
+    // --- Database & Local Storage Persistence ---
+    async function saveAllSettings() {
+        try {
+            // Save to database via API
+            const groups = getCurrentGroupParams();
+            await window.apiClient.saveGroups(groups);
+            await window.apiClient.saveGroupConstraints(groupConstraints);
+            await window.apiClient.saveIndividualConstraints(individualConstraints);
+            await window.apiClient.saveWeeklyScheduleSettings(weeklyScheduleSettings);
+            
+            const settings = {
+                'scheduler_rooms': document.getElementById('rooms-select').value,
+                'scheduler_horizon_weeks': document.getElementById('horizon-weeks').value || '5',
+                'scheduler_auto_extend': document.getElementById('auto-extend').checked ? 'true' : 'false',
+                'scheduler_start_alignment': document.getElementById('start-alignment').value || 'as_is',
+                'scheduler_allow_past': document.getElementById('allow-past').checked ? 'true' : 'false',
+                'scheduler_skip_partial_week': document.getElementById('skip-partial-week').checked ? 'true' : 'false',
+                'scheduler_min_working_days': document.getElementById('min-working-days').value || '3'
+            };
+            await window.apiClient.saveSettings(settings);
+            
+            // Show connection status
+            updateConnectionStatus();
+        } catch (error) {
+            console.error('Failed to save settings:', error);
+            // Fallback to localStorage is handled by API client
+        }
     }
 
-    function loadSettings() {
-        const savedGroups = JSON.parse(localStorage.getItem('scheduler_group_params'));
-        groupConstraints = JSON.parse(localStorage.getItem('scheduler_group_constraints')) || [];
-        individualConstraints = JSON.parse(localStorage.getItem('scheduler_individual_constraints')) || {};
-        weeklyScheduleSettings = JSON.parse(localStorage.getItem('scheduler_weekly_settings')) || {};
-        const groups = savedGroups || DEFAULT_GROUPS;
+    async function loadSettings() {
+        try {
+            // Load from database via API
+            const savedGroups = await window.apiClient.getGroups();
+            groupConstraints = await window.apiClient.getGroupConstraints();
+            individualConstraints = await window.apiClient.getIndividualConstraints();
+            weeklyScheduleSettings = await window.apiClient.getWeeklyScheduleSettings();
+            const settings = await window.apiClient.getSettings();
+            
+            const groups = (savedGroups && savedGroups.length > 0) ? savedGroups : DEFAULT_GROUPS;
+            
+            // Apply loaded settings to UI
+            if (settings['scheduler_rooms']) {
+                document.getElementById('rooms-select').value = settings['scheduler_rooms'];
+            }
+            if (settings['scheduler_horizon_weeks']) {
+                document.getElementById('horizon-weeks').value = settings['scheduler_horizon_weeks'];
+            }
+            if (settings['scheduler_auto_extend']) {
+                document.getElementById('auto-extend').checked = settings['scheduler_auto_extend'] === 'true';
+            }
+            if (settings['scheduler_start_alignment']) {
+                document.getElementById('start-alignment').value = settings['scheduler_start_alignment'];
+            }
+            if (settings['scheduler_allow_past']) {
+                document.getElementById('allow-past').checked = settings['scheduler_allow_past'] === 'true';
+            }
+            if (settings['scheduler_skip_partial_week']) {
+                document.getElementById('skip-partial-week').checked = settings['scheduler_skip_partial_week'] === 'true';
+            }
+            if (settings['scheduler_min_working_days']) {
+                document.getElementById('min-working-days').value = settings['scheduler_min_working_days'];
+            }
+            
+            updateConnectionStatus();
+        } catch (error) {
+            console.error('Failed to load settings from database, using localStorage:', error);
+            // Fallback to localStorage (handled by API client)
+            const savedGroups = JSON.parse(localStorage.getItem('scheduler_group_params'));
+            groupConstraints = JSON.parse(localStorage.getItem('scheduler_group_constraints')) || [];
+            individualConstraints = JSON.parse(localStorage.getItem('scheduler_individual_constraints')) || {};
+            weeklyScheduleSettings = JSON.parse(localStorage.getItem('scheduler_weekly_settings')) || {};
+            const groups = savedGroups || DEFAULT_GROUPS;
+        }
 
         const groupContainer = document.getElementById('group-param-container');
         const groupSelect = document.getElementById('constraint-group');
@@ -802,9 +900,9 @@
     }
     
     /**
-     * Save solution to localStorage for automatic persistence
+     * Save solution to database and localStorage for automatic persistence
      */
-    function saveSolutionToStorage(solution, numRooms, stats, unscheduledCount) {
+    async function saveSolutionToStorage(solution, numRooms, stats, unscheduledCount) {
         try {
             const solutionData = {
                 solution: Array.from(solution.entries()),
@@ -814,17 +912,56 @@
                 timestamp: new Date().toISOString(),
                 currentDate: document.getElementById('current-date').value
             };
+            
+            // Save to database via API
+            if (window.apiClient) {
+                await window.apiClient.saveAppointments(solution);
+            }
+            
+            // Also save to localStorage as backup
             localStorage.setItem('scheduler_last_solution', JSON.stringify(solutionData));
+            
+            updateConnectionStatus();
         } catch (e) {
             console.error('Failed to save solution:', e);
+            // Fallback to localStorage only
+            const solutionData = {
+                solution: Array.from(solution.entries()),
+                numRooms,
+                stats,
+                unscheduledCount,
+                timestamp: new Date().toISOString(),
+                currentDate: document.getElementById('current-date').value
+            };
+            localStorage.setItem('scheduler_last_solution', JSON.stringify(solutionData));
         }
     }
     
     /**
-     * Load last solution from localStorage
+     * Load last solution from database or localStorage
      */
-    function loadLastSolution() {
+    async function loadLastSolution() {
         try {
+            // Try to load from database first
+            if (window.apiClient) {
+                const appointmentsMap = await window.apiClient.getAppointments();
+                if (appointmentsMap && appointmentsMap.size > 0) {
+                    solutionCache = appointmentsMap;
+                    
+                    // Show loaded solution indicator
+                    const resultsDiv = document.getElementById('results');
+                    let resultHTML = `<span class="feasible">📋 Schedule Loaded from Database</span>`;
+                    resultHTML += `<div class="solver-stats">${appointmentsMap.size} appointment(s) loaded</div>`;
+                    resultHTML += `<div class="solver-stats" style="color: #28a745; font-weight: bold;">✨ Synced with Neon Database</div>`;
+                    resultsDiv.innerHTML = resultHTML;
+                    
+                    renderCalendar();
+                    updateConnectionStatus();
+                    return true;
+                }
+            }
+            
+            // Fallback to localStorage
             const saved = localStorage.getItem('scheduler_last_solution');
             if (saved) {
                 const solutionData = JSON.parse(saved);
